@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Car,
@@ -11,8 +12,8 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/', active: true },
-  { id: 'traffic', label: 'Traffic', icon: Car, path: '#', badge: 'Live' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { id: 'traffic', label: 'Traffic', icon: Car, path: '/traffic', badge: 'Live' },
   { id: 'defects', label: 'Road Defects', icon: AlertTriangle, path: '#', badge: '12 new' },
   { id: 'incidents', label: 'Incidents', icon: ShieldAlert, path: '#', badge: '1 crit' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '#' },
@@ -20,6 +21,8 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const location = useLocation();
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -38,8 +41,8 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
           {/* Header & Logo */}
           <div className="p-5 border-b border-slate-800/80 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/30">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/30 group-hover:scale-105 transition-transform">
                 <Eye className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -51,7 +54,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 </div>
                 <p className="text-[11px] font-medium text-slate-400">Transit Sensing Platform</p>
               </div>
-            </div>
+            </Link>
 
             {/* Close button on mobile */}
             <button
@@ -81,17 +84,20 @@ export default function Sidebar({ isOpen, onClose }) {
           <nav className="px-3 space-y-1 pb-4">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = location.pathname === item.path;
               return (
-                <a
+                <Link
                   key={item.id}
-                  href={item.path}
+                  to={item.path}
                   onClick={(e) => {
-                    if (!item.active) {
+                    if (item.path === '#') {
                       e.preventDefault();
+                    } else if (isOpen) {
+                      onClose();
                     }
                   }}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    item.active
+                    isActive
                       ? 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-400 border border-cyan-500/30 shadow-xs'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                   }`}
@@ -99,7 +105,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <div className="flex items-center space-x-3">
                     <Icon
                       className={`h-4 w-4 ${
-                        item.active ? 'text-cyan-400' : 'text-slate-400'
+                        isActive ? 'text-cyan-400' : 'text-slate-400'
                       }`}
                     />
                     <span>{item.label}</span>
@@ -112,13 +118,15 @@ export default function Sidebar({ isOpen, onClose }) {
                           ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                           : item.badge.includes('new')
                           ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : isActive
+                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                           : 'bg-slate-800 text-slate-400'
                       }`}
                     >
                       {item.badge}
                     </span>
                   )}
-                </a>
+                </Link>
               );
             })}
           </nav>
