@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Traffic from './pages/Traffic';
 import RoadDefects from './pages/RoadDefects';
 import Incidents from './pages/Incidents';
+import Analytics from './pages/Analytics';
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
           element={
             <DashboardLayout>
               <Incidents />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <DashboardLayout>
+              <Analytics />
             </DashboardLayout>
           }
         />

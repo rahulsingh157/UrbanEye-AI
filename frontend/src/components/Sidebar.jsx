@@ -16,7 +16,7 @@ const navItems = [
   { id: 'traffic', label: 'Traffic', icon: Car, path: '/traffic', badge: 'Live' },
   { id: 'defects', label: 'Road Defects', icon: AlertTriangle, path: '/road-defects', badge: '12 new' },
   { id: 'incidents', label: 'Incidents', icon: ShieldAlert, path: '/incidents', badge: '1 crit' },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '#' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/analytics' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '#' },
 ];
 
