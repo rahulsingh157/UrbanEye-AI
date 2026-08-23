@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Traffic from './pages/Traffic';
+import RoadDefects from './pages/RoadDefects';
+import Incidents from './pages/Incidents';
 
 function App() {
   return (
@@ -20,6 +22,22 @@ function App() {
           element={
             <DashboardLayout>
               <Traffic />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/road-defects"
+          element={
+            <DashboardLayout>
+              <RoadDefects />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/incidents"
+          element={
+            <DashboardLayout>
+              <Incidents />
             </DashboardLayout>
           }
         />

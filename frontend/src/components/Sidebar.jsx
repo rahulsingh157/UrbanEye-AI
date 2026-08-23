@@ -14,8 +14,8 @@ import {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { id: 'traffic', label: 'Traffic', icon: Car, path: '/traffic', badge: 'Live' },
-  { id: 'defects', label: 'Road Defects', icon: AlertTriangle, path: '#', badge: '12 new' },
-  { id: 'incidents', label: 'Incidents', icon: ShieldAlert, path: '#', badge: '1 crit' },
+  { id: 'defects', label: 'Road Defects', icon: AlertTriangle, path: '/road-defects', badge: '12 new' },
+  { id: 'incidents', label: 'Incidents', icon: ShieldAlert, path: '/incidents', badge: '1 crit' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '#' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '#' },
 ];
