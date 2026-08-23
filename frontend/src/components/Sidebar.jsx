@@ -17,7 +17,7 @@ const navItems = [
   { id: 'defects', label: 'Road Defects', icon: AlertTriangle, path: '/road-defects', badge: '12 new' },
   { id: 'incidents', label: 'Incidents', icon: ShieldAlert, path: '/incidents', badge: '1 crit' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/analytics' },
-  { id: 'settings', label: 'Settings', icon: Settings, path: '#' },
+  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

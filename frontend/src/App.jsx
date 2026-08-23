@@ -5,6 +5,7 @@ import Traffic from './pages/Traffic';
 import RoadDefects from './pages/RoadDefects';
 import Incidents from './pages/Incidents';
 import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -47,6 +48,14 @@ function App() {
           element={
             <DashboardLayout>
               <Analytics />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <DashboardLayout>
+              <Settings />
             </DashboardLayout>
           }
         />
