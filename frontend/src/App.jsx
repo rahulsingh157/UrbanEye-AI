@@ -1,11 +1,31 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import DashboardLayout from './layouts/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-      <h1 className="text-5xl font-bold">
-        UrbanEye AI
-      </h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          }
+        />
+        {/* Fallback route back to dashboard */}
+        <Route
+          path="*"
+          element={
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
