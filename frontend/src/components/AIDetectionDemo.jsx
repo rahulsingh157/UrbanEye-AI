@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://urbaneye-ai-backend.onrender.com/api/detect';
+
 import { useState } from 'react';
 import {
   Sparkles,
@@ -55,7 +57,7 @@ export default function AIDetectionDemo({ onDefectAdded }) {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5000/api/detect', {
+      const response = await fetch(`${API_BASE_URL}/detect`, {
         method: 'POST',
         body: formData
       });
@@ -93,7 +95,7 @@ export default function AIDetectionDemo({ onDefectAdded }) {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/defects', {
+      const response = await fetch(`${API_BASE_URL}/defects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
