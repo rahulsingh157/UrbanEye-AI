@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://urbaneye-ai-backend.onrender.com/api/detect';
+const API_BASE_URL = 'https://urbaneye-ai-backend.onrender.com/api';
 
 import { useState } from 'react';
 import {
