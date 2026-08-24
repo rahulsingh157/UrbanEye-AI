@@ -82,7 +82,7 @@ const defects = [
   {
     id: "DEF-1007",
     type: "Pothole",
-    location: "MG Road near IFFCO Chowk",
+    location: "MG Road near IFFCO Chowk, Gurgaon",
     latitude: 28.4720,
     longitude: 77.0726,
     severity: "High",
@@ -101,6 +101,126 @@ const defects = [
     confidence: "89%",
     busId: "BUS-127",
     timestamp: "2026-08-24T11:50:00Z",
+    status: "Resolved"
+  },
+  {
+    id: "DEF-1009",
+    type: "Pothole",
+    location: "DND Flyway Expressway Exit",
+    latitude: 28.5833,
+    longitude: 77.2625,
+    severity: "Critical",
+    confidence: "95%",
+    busId: "BUS-119",
+    timestamp: "2026-08-24T12:10:00Z",
+    status: "New"
+  },
+  {
+    id: "DEF-1010",
+    type: "Damaged Sign",
+    location: "Connaught Place Radial Road 3",
+    latitude: 28.6315,
+    longitude: 77.2167,
+    severity: "Low",
+    confidence: "86%",
+    busId: "BUS-104",
+    timestamp: "2026-08-24T12:35:00Z",
+    status: "Verified"
+  },
+  {
+    id: "DEF-1011",
+    type: "Waterlogging",
+    location: "Pul Prahladpur Underpass",
+    latitude: 28.5125,
+    longitude: 77.2890,
+    severity: "High",
+    confidence: "94%",
+    busId: "BUS-115",
+    timestamp: "2026-08-24T13:00:00Z",
+    status: "Assigned"
+  },
+  {
+    id: "DEF-1012",
+    type: "Missing Divider",
+    location: "Mehrauli-Badarpur Road",
+    latitude: 28.5180,
+    longitude: 77.2050,
+    severity: "Critical",
+    confidence: "98%",
+    busId: "BUS-107",
+    timestamp: "2026-08-24T13:30:00Z",
+    status: "New"
+  },
+  {
+    id: "DEF-1013",
+    type: "Damaged Surface",
+    location: "Golf Course Road, Gurgaon",
+    latitude: 28.4595,
+    longitude: 77.0980,
+    severity: "Medium",
+    confidence: "89%",
+    busId: "BUS-122",
+    timestamp: "2026-08-24T14:15:00Z",
+    status: "Under Repair"
+  },
+  {
+    id: "DEF-1014",
+    type: "Pothole",
+    location: "Greater Noida Expressway, Sector 128",
+    latitude: 28.5385,
+    longitude: 77.3480,
+    severity: "High",
+    confidence: "92%",
+    busId: "BUS-110",
+    timestamp: "2026-08-24T14:45:00Z",
+    status: "New"
+  },
+  {
+    id: "DEF-1015",
+    type: "Missing Crossing",
+    location: "Peeragarhi Chowk Intersection",
+    latitude: 28.6790,
+    longitude: 77.0940,
+    severity: "Medium",
+    confidence: "87%",
+    busId: "BUS-131",
+    timestamp: "2026-08-24T15:20:00Z",
+    status: "Verified"
+  },
+  {
+    id: "DEF-1016",
+    type: "Pothole",
+    location: "Kashmere Gate ISBT Approach Road",
+    latitude: 28.6675,
+    longitude: 77.2280,
+    severity: "High",
+    confidence: "96%",
+    busId: "BUS-103",
+    timestamp: "2026-08-24T15:55:00Z",
+    status: "New"
+  },
+  {
+    id: "DEF-1017",
+    type: "Waterlogging",
+    location: "Dwarka Sector 21 Underpass",
+    latitude: 28.5520,
+    longitude: 77.0580,
+    severity: "Critical",
+    confidence: "97%",
+    busId: "BUS-125",
+    timestamp: "2026-08-24T16:30:00Z",
+    status: "Assigned"
+  },
+  {
+    id: "DEF-1018",
+    type: "Damaged Sign",
+    location: "Loni Road Border Crossing",
+    latitude: 28.7120,
+    longitude: 77.2910,
+    severity: "Low",
+    confidence: "85%",
+    busId: "BUS-116",
+    timestamp: "2026-08-24T17:10:00Z",
     status: "Resolved"
   }
 ];
@@ -172,9 +292,23 @@ const incidents = [
     vehiclePlate: "DL08 EF 4321",
     confidence: "94%",
     severity: "High",
+    status: "Resolved",
+    assignedUnit: "UNIT-01",
+    timestamp: "2026-08-24T11:15:00Z"
+  },
+  {
+    id: "INC-1006",
+    type: "Hit-and-Run",
+    location: "Ring Road, Lajpat Nagar Flyover",
+    latitude: 28.5680,
+    longitude: 77.2430,
+    vehicleNumber: "UP14 ET 3390",
+    vehiclePlate: "UP14 ET 3390",
+    confidence: "96%",
+    severity: "Critical",
     status: "Active",
     assignedUnit: null,
-    timestamp: "2026-08-24T11:15:00Z"
+    timestamp: "2026-08-24T12:00:00Z"
   }
 ];
 

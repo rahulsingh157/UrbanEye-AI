@@ -7,7 +7,7 @@ import {
   Tooltip,
   Cell
 } from 'recharts';
-import { AlertTriangle, Layers } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 const mockDefectTypes = [
   { name: 'Potholes', count: 184, color: '#f97316' },
@@ -23,12 +23,24 @@ const mockSeverity = [
   { label: 'Critical', count: 8, color: 'bg-red-500', textColor: 'text-red-400', badge: 'bg-red-500/20 text-red-400 border-red-500/30' },
   { label: 'High', count: 42, color: 'bg-orange-500', textColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
   { label: 'Medium', count: 137, color: 'bg-yellow-500', textColor: 'text-yellow-400', badge: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  { label: 'Low', count: 240, color: 'bg-emerald-500', textColor: 'text-emerald-400', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+  { label: 'Low', count: 240, color: 'bg-emerald-500', textColor: 'text-emerald-400', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' },
 ];
 
-const CustomTooltip = ({ active, payload }) => {
+const colorMap = {
+  'Pothole': '#f97316',
+  'Potholes': '#f97316',
+  'Damaged Surface': '#fbbf24',
+  'Missing Divider': '#818cf8',
+  'Missing Crossing': '#38bdf8',
+  'Damaged Sign': '#a78bfa',
+  'Waterlogging': '#06b6d4',
+  'Other Hazards': '#94a3b8'
+};
+
+const CustomTooltip = ({ active, payload, totalCount }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const share = totalCount > 0 ? ((data.count / totalCount) * 100).toFixed(1) : 0;
     return (
       <div className="bg-slate-950/95 border border-slate-800 p-3 rounded-lg shadow-xl backdrop-blur-md text-xs space-y-1 min-w-[150px]">
         <p className="font-bold text-white flex items-center justify-between border-b border-slate-800 pb-1">
@@ -36,7 +48,7 @@ const CustomTooltip = ({ active, payload }) => {
           <span style={{ color: data.color }} className="font-bold">{data.count}</span>
         </p>
         <p className="text-[11px] text-slate-400 pt-0.5">
-          Share: <strong className="text-slate-200">{((data.count / 427) * 100).toFixed(1)}%</strong> of total
+          Share: <strong className="text-slate-200">{share}%</strong> of total
         </p>
       </div>
     );
@@ -44,7 +56,44 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function DefectTypeChart() {
+export default function DefectTypeChart({ defects = [] }) {
+  let defectTypes = mockDefectTypes;
+  let severityData = mockSeverity;
+  let totalDetections = 427;
+
+  if (Array.isArray(defects) && defects.length > 0) {
+    totalDetections = defects.length;
+
+    // Aggregate counts by defect type
+    const typeCounts = {};
+    const sevCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+
+    defects.forEach((d) => {
+      const type = d.type || 'Other Hazards';
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+
+      const sev = d.severity || 'Medium';
+      if (sevCounts[sev] !== undefined) {
+        sevCounts[sev]++;
+      } else {
+        sevCounts.Medium++;
+      }
+    });
+
+    defectTypes = Object.keys(typeCounts).map((name) => ({
+      name,
+      count: typeCounts[name],
+      color: colorMap[name] || '#38bdf8'
+    }));
+
+    severityData = [
+      { label: 'Critical', count: sevCounts.Critical, color: 'bg-red-500', textColor: 'text-red-400', badge: 'bg-red-500/20 text-red-400 border-red-500/30' },
+      { label: 'High', count: sevCounts.High, color: 'bg-orange-500', textColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+      { label: 'Medium', count: sevCounts.Medium, color: 'bg-yellow-500', textColor: 'text-yellow-400', badge: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+      { label: 'Low', count: sevCounts.Low, color: 'bg-emerald-500', textColor: 'text-emerald-400', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' },
+    ];
+  }
+
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/90 shadow-md p-5 flex flex-col justify-between h-[480px]">
       <div>
@@ -65,7 +114,7 @@ export default function DefectTypeChart() {
           </div>
 
           <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-2 py-1 rounded border border-amber-500/30">
-            427 TOTAL DETECTIONS
+            {totalDetections} TOTAL DETECTIONS
           </span>
         </div>
 
@@ -74,7 +123,7 @@ export default function DefectTypeChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={mockDefectTypes}
+              data={defectTypes}
               margin={{ top: 5, right: 20, left: 25, bottom: 0 }}
             >
               <XAxis type="number" stroke="#64748b" fontSize={11} hide />
@@ -87,9 +136,9 @@ export default function DefectTypeChart() {
                 axisLine={false}
                 width={110}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e293b50' }} />
+              <Tooltip content={<CustomTooltip totalCount={totalDetections} />} cursor={{ fill: '#1e293b50' }} />
               <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={16}>
-                {mockDefectTypes.map((entry, index) => (
+                {defectTypes.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
@@ -98,33 +147,25 @@ export default function DefectTypeChart() {
         </div>
       </div>
 
-      {/* Severity Breakdown Section */}
-      <div className="pt-3 border-t border-slate-800/60 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Layers className="h-3.5 w-3.5 text-cyan-400" />
-            Defect Severity Hierarchy
-          </p>
-          <span className="text-[10px] text-slate-400 font-mono">100% Categorized</span>
+      {/* Severity Breakdown Bar */}
+      <div className="pt-3 border-t border-slate-800/80">
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2">
+          <span>Severity Breakdown</span>
+          <span className="text-[10px] text-slate-400">Weighted Risk Index</span>
         </div>
-
-        {/* Severity Progress Stack */}
-        <div className="w-full h-2 rounded-full bg-slate-950 flex overflow-hidden border border-slate-800">
-          <div className="h-full bg-red-500" style={{ width: `${(8 / 427) * 100}%` }} title="Critical: 8" />
-          <div className="h-full bg-orange-500" style={{ width: `${(42 / 427) * 100}%` }} title="High: 42" />
-          <div className="h-full bg-yellow-500" style={{ width: `${(137 / 427) * 100}%` }} title="Medium: 137" />
-          <div className="h-full bg-emerald-500" style={{ width: `${(240 / 427) * 100}%` }} title="Low: 240" />
-        </div>
-
-        {/* Severity Grid Badges */}
-        <div className="grid grid-cols-4 gap-2 text-center pt-1">
-          {mockSeverity.map((item) => (
+        <div className="grid grid-cols-4 gap-2">
+          {severityData.map((item) => (
             <div
               key={item.label}
-              className={`p-1.5 rounded-lg border flex flex-col items-center justify-center ${item.badge}`}
+              className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 flex flex-col justify-between"
             >
-              <span className="text-[10px] font-semibold uppercase">{item.label}</span>
-              <span className="text-sm font-bold font-mono mt-0.5">{item.count}</span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase">{item.label}</span>
+              <div className="flex items-center justify-between mt-1">
+                <span className={`text-xs font-extrabold ${item.textColor}`}>{item.count}</span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${item.badge}`}>
+                  {totalDetections > 0 ? ((item.count / totalDetections) * 100).toFixed(0) : 0}%
+                </span>
+              </div>
             </div>
           ))}
         </div>

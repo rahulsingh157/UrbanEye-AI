@@ -6,7 +6,8 @@ import {
   MapPin,
   Bus,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  RotateCw
 } from 'lucide-react';
 
 const mockDefectList = [
@@ -89,20 +90,45 @@ const mockDefectList = [
   }
 ];
 
-export default function DefectTable() {
+const getCategoryFromType = (item) => {
+  if (item.category) return item.category;
+  const t = (item.type || '').toLowerCase();
+  if (t.includes('pothole')) return 'Potholes';
+  if (t.includes('surface') || t.includes('crack') || t.includes('rail')) return 'Road Surface';
+  if (t.includes('sign') || t.includes('divider') || t.includes('crossing')) return 'Traffic Signs';
+  if (t.includes('water')) return 'Waterlogging';
+  return 'Road Surface';
+};
+
+const formatTime = (ts) => {
+  if (!ts) return 'N/A';
+  if (typeof ts === 'string' && (ts.includes('AM') || ts.includes('PM'))) return ts;
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return String(ts);
+  }
+};
+
+export default function DefectTable({ defects = [], loading = false, error = null, onRefresh }) {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [severityFilter, setSeverityFilter] = useState('All');
   const [search, setSearch] = useState('');
 
-  const filteredDefects = mockDefectList.filter((item) => {
+  const dataList = defects.length > 0 ? defects : mockDefectList;
+
+  const filteredDefects = dataList.filter((item) => {
+    const itemCategory = getCategoryFromType(item);
     const matchesCategory =
-      categoryFilter === 'All' ? true : item.category === categoryFilter;
+      categoryFilter === 'All' ? true : itemCategory === categoryFilter;
     const matchesSeverity =
       severityFilter === 'All' ? true : item.severity === severityFilter;
     const matchesSearch =
-      item.type.toLowerCase().includes(search.toLowerCase()) ||
-      item.location.toLowerCase().includes(search.toLowerCase()) ||
-      item.id.toLowerCase().includes(search.toLowerCase());
+      (item.type || '').toLowerCase().includes(search.toLowerCase()) ||
+      (item.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (item.id || '').toLowerCase().includes(search.toLowerCase());
 
     return matchesCategory && matchesSeverity && matchesSearch;
   });
@@ -151,6 +177,17 @@ export default function DefectTable() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={loading}
+                title="Refresh defects feed"
+                className="p-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-colors disabled:opacity-50"
+              >
+                <RotateCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+
             {/* Search Input */}
             <div className="relative flex-1 sm:w-44">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
@@ -210,7 +247,33 @@ export default function DefectTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredDefects.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="py-12 text-center text-cyan-400">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Fetching live defects from backend...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="py-10 text-center text-red-400">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <p className="font-semibold">Unable to fetch defects from server</p>
+                      <p className="text-xs text-slate-400">{error}</p>
+                      {onRefresh && (
+                        <button
+                          onClick={onRefresh}
+                          className="mt-1 px-3 py-1 bg-slate-800 text-cyan-400 rounded text-xs hover:bg-slate-700 transition-colors"
+                        >
+                          Retry Connection
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredDefects.length > 0 ? (
                 filteredDefects.map((item) => (
                   <tr
                     key={item.id}
@@ -252,7 +315,7 @@ export default function DefectTable() {
                     <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap">
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3 text-slate-500" />
-                        <span>{item.time}</span>
+                        <span>{formatTime(item.timestamp || item.time)}</span>
                       </div>
                     </td>
                     <td className="py-2.5 px-3 text-right">

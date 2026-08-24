@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback } from 'react';
+import { fetchIncidents, updateIncident } from '../services/incidentService';
 import StatCard from '../components/StatCard';
 import CriticalIncident from '../components/CriticalIncident';
 import VehicleEvidence from '../components/VehicleEvidence';
@@ -9,10 +11,69 @@ import {
   AlertTriangle,
   Car,
   Camera,
-  CheckCircle2
+  CheckCircle2,
+  RotateCw,
+  AlertCircle
 } from 'lucide-react';
 
 export default function Incidents() {
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const loadIncidents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchIncidents();
+      if (Array.isArray(data)) {
+        setIncidents(data);
+        setIsOffline(false);
+      }
+    } catch (err) {
+      console.error('Failed to load incidents from backend API:', err);
+      setError('Backend service unreachable. Displaying cached local telemetry & fallback records.');
+      setIsOffline(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadIncidents();
+  }, [loadIncidents]);
+
+  const handleUpdateIncident = async (id, updates) => {
+    try {
+      const updatedItem = await updateIncident(id, updates);
+      setIncidents((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updatedItem } : item))
+      );
+    } catch (err) {
+      console.error('Failed to update incident:', err);
+      setIncidents((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+      );
+    }
+  };
+
+  // Derived metrics
+  const activeIncidentsCount = incidents.length > 0
+    ? incidents.filter((i) => i.status !== 'Resolved').length
+    : 3;
+  const criticalCount = incidents.length > 0
+    ? incidents.filter((i) => i.severity === 'Critical' && i.status !== 'Resolved').length
+    : 1;
+  const hitAndRunCount = incidents.length > 0
+    ? incidents.filter((i) => i.type.includes('Hit-and-Run')).length
+    : 7;
+  const resolvedCount = incidents.length > 0
+    ? incidents.filter((i) => i.status === 'Resolved').length
+    : 5;
+
+  const criticalIncidentItem = incidents.find((i) => i.severity === 'Critical') || incidents[0];
+
   return (
     <div className="space-y-5">
       {/* Welcome Banner */}
@@ -47,18 +108,46 @@ export default function Incidents() {
           </div>
           <div className="px-4 py-2 rounded-lg bg-slate-950/80 border border-slate-800 text-right flex-1 md:flex-initial">
             <p className="text-[10px] text-slate-400 font-semibold uppercase">Critical Cases</p>
-            <p className="text-sm font-bold text-red-400 font-mono">1 Active</p>
+            <p className="text-sm font-bold text-red-400 font-mono">{criticalCount} Active</p>
           </div>
+          <button
+            onClick={loadIncidents}
+            disabled={loading}
+            className="px-3 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all font-semibold text-xs flex items-center space-x-1 disabled:opacity-50"
+            title="Refresh incident monitoring data"
+          >
+            <RotateCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
+
+      {/* Prominent Offline / Demo Mode Indicator */}
+      {isOffline && (
+        <div className="rounded-xl bg-amber-950/60 border border-amber-500/50 p-4 text-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-md">
+          <div className="flex items-center space-x-3">
+            <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold uppercase tracking-wider text-[10px] animate-pulse">
+              OFFLINE / DEMO MODE
+            </span>
+            <span className="font-medium text-amber-200">
+              Backend service unreachable. Displaying cached local telemetry & fallback records.
+            </span>
+          </div>
+          <button
+            onClick={loadIncidents}
+            className="px-3 py-1 bg-amber-900 hover:bg-amber-800 border border-amber-600 rounded text-amber-100 font-semibold transition-colors flex-shrink-0 text-xs shadow-xs"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Top 5 Statistic Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
-          title="Active Incidents"
-          value="3"
+          title="Open Incidents"
+          value={String(activeIncidentsCount)}
           subtext="Currently Monitored"
-          trend="1 Critical"
+          trend={`${criticalCount} Critical`}
           trendType="up"
           trendText="action needed"
           status="red"
@@ -66,7 +155,7 @@ export default function Incidents() {
         />
         <StatCard
           title="Critical Alerts"
-          value="1"
+          value={String(criticalCount)}
           subtext="Immediate Action Needed"
           trend="Hit-and-Run"
           trendType="up"
@@ -76,7 +165,7 @@ export default function Incidents() {
         />
         <StatCard
           title="Hit-and-Run Cases"
-          value="7"
+          value={String(hitAndRunCount)}
           subtext="Tracked Offender Vehicles"
           trend="+2"
           trendType="up"
@@ -96,7 +185,7 @@ export default function Incidents() {
         />
         <StatCard
           title="Resolved Today"
-          value="5"
+          value={String(resolvedCount)}
           subtext="Case Files Closed"
           trend="100%"
           trendType="up"
@@ -109,7 +198,10 @@ export default function Incidents() {
       {/* Hero Row: Critical Incident Banner (8 cols) + ANPR Vehicle Evidence (4 cols) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-8">
-          <CriticalIncident />
+          <CriticalIncident
+            incident={criticalIncidentItem}
+            onUpdateIncident={handleUpdateIncident}
+          />
         </div>
         <div className="lg:col-span-4">
           <VehicleEvidence />
@@ -129,7 +221,13 @@ export default function Incidents() {
       {/* Bottom Row: Recent Incidents Log Table (12 cols) */}
       <section className="grid grid-cols-1 gap-5">
         <div className="col-span-12">
-          <IncidentTable />
+          <IncidentTable
+            incidents={incidents}
+            loading={loading}
+            error={error}
+            onUpdateIncident={handleUpdateIncident}
+            onRefresh={loadIncidents}
+          />
         </div>
       </section>
     </div>

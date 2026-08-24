@@ -23,11 +23,11 @@ const createCustomDefectIcon = (type, severity) => {
     bgColor = 'bg-cyan-500';
     borderColor = 'border-cyan-200';
     iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>`;
-  } else if (type === 'Traffic Signs') {
+  } else if (type === 'Traffic Signs' || type === 'Damaged Sign') {
     bgColor = 'bg-purple-500';
     borderColor = 'border-purple-200';
     iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>`;
-  } else if (type === 'Road Surface') {
+  } else if (type === 'Road Surface' || type === 'Damaged Surface') {
     bgColor = 'bg-yellow-500';
     borderColor = 'border-yellow-200';
   }
@@ -130,12 +130,52 @@ const mockDefectLocations = [
   }
 ];
 
-export default function DefectMap() {
+const getCategoryFromType = (item) => {
+  if (item.category) return item.category;
+  const t = (item.type || '').toLowerCase();
+  if (t.includes('pothole')) return 'Potholes';
+  if (t.includes('surface') || t.includes('crack') || t.includes('rail')) return 'Road Surface';
+  if (t.includes('sign') || t.includes('divider') || t.includes('crossing')) return 'Traffic Signs';
+  if (t.includes('water')) return 'Waterlogging';
+  return 'Road Surface';
+};
+
+const formatTime = (ts) => {
+  if (!ts) return 'N/A';
+  if (typeof ts === 'string' && (ts.includes('AM') || ts.includes('PM'))) return ts;
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return String(ts);
+  }
+};
+
+export default function DefectMap({ defects = [] }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  const rawList = defects.length > 0
+    ? defects.map((d) => ({
+        id: d.id,
+        title: d.type || d.title || 'Road Defect',
+        category: getCategoryFromType(d),
+        type: d.type,
+        location: d.location,
+        coords: (d.latitude !== undefined && d.longitude !== undefined)
+          ? [Number(d.latitude), Number(d.longitude)]
+          : (d.coords || [28.6139, 77.2090]),
+        severity: d.severity,
+        time: formatTime(d.timestamp || d.time),
+        busId: d.busId,
+        confidence: d.confidence,
+        status: d.status
+      }))
+    : mockDefectLocations;
+
   const filteredDefects = selectedCategory === 'All'
-    ? mockDefectLocations
-    : mockDefectLocations.filter((d) => d.category === selectedCategory);
+    ? rawList
+    : rawList.filter((d) => d.category === selectedCategory);
 
   return (
     <div className="relative rounded-xl border border-slate-800 bg-slate-900/90 shadow-md overflow-hidden flex flex-col h-[500px]">

@@ -1,18 +1,65 @@
+import { useState, useEffect, useCallback } from 'react';
+import { fetchDefects } from '../services/defectService';
 import StatCard from '../components/StatCard';
 import DefectTypeChart from '../charts/DefectTypeChart';
 import DetectionConfidence from '../components/DetectionConfidence';
 import DefectMap from '../maps/DefectMap';
 import PriorityQueue from '../components/PriorityQueue';
 import DefectTable from '../components/DefectTable';
+import AIDetectionDemo from '../components/AIDetectionDemo';
 import {
   AlertTriangle,
   Sparkles,
   ShieldAlert,
   Wrench,
-  CheckCircle2
+  CheckCircle2,
+  RotateCw,
+  AlertCircle
 } from 'lucide-react';
 
 export default function RoadDefects() {
+  const [defects, setDefects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isOfflineFallback, setIsOfflineFallback] = useState(false);
+
+  const loadDefects = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchDefects();
+      if (Array.isArray(data)) {
+        setDefects(data);
+        setIsOfflineFallback(false);
+      }
+    } catch (err) {
+      console.error('Failed to load defects from backend API:', err);
+      setError('Backend service unreachable. Displaying cached local telemetry & fallback records.');
+      setIsOfflineFallback(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDefects();
+  }, [loadDefects]);
+
+  // Derived metrics from live defects data or fallback defaults
+  const totalDefectsCount = defects.length > 0 ? defects.length : 427;
+  const activeDefectsCount = defects.length > 0 
+    ? defects.filter(d => d.status !== 'Resolved').length 
+    : 243;
+  const highPriorityCount = defects.length > 0 
+    ? defects.filter(d => d.severity === 'High' || d.severity === 'Critical').length 
+    : 12;
+  const underRepairCount = defects.length > 0 
+    ? defects.filter(d => d.status === 'Under Repair').length 
+    : 38;
+  const resolvedCount = defects.length > 0 
+    ? defects.filter(d => d.status === 'Resolved').length 
+    : 184;
+
   return (
     <div className="space-y-5">
       {/* Welcome Banner */}
@@ -47,16 +94,47 @@ export default function RoadDefects() {
           </div>
           <div className="px-4 py-2 rounded-lg bg-slate-950/80 border border-slate-800 text-right flex-1 md:flex-initial">
             <p className="text-[10px] text-slate-400 font-semibold uppercase">Active Defects</p>
-            <p className="text-sm font-bold text-amber-400 font-mono">243 Open</p>
+            <p className="text-sm font-bold text-amber-400 font-mono">
+              {activeDefectsCount} Open
+            </p>
           </div>
+          <button
+            onClick={loadDefects}
+            disabled={loading}
+            className="px-3.5 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all font-semibold text-xs flex items-center space-x-1.5 disabled:opacity-50"
+            title="Refresh defects data from backend"
+          >
+            <RotateCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
         </div>
       </div>
+
+      {/* Prominent Offline / Demo Mode Indicator */}
+      {isOfflineFallback && (
+        <div className="rounded-xl bg-amber-950/60 border border-amber-500/50 p-4 text-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-md">
+          <div className="flex items-center space-x-3">
+            <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold uppercase tracking-wider text-[10px] animate-pulse">
+              OFFLINE / DEMO MODE
+            </span>
+            <span className="font-medium text-amber-200">
+              Backend service unreachable. Displaying cached local telemetry & fallback records.
+            </span>
+          </div>
+          <button
+            onClick={loadDefects}
+            className="px-3 py-1 bg-amber-900 hover:bg-amber-800 border border-amber-600 rounded text-amber-100 font-semibold transition-colors flex-shrink-0 text-xs shadow-xs"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Top 5 Statistic Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Defects"
-          value="427"
+          value={String(totalDefectsCount)}
           subtext="Citywide Monitored Grid"
           trend="+12"
           trendType="up"
@@ -76,9 +154,9 @@ export default function RoadDefects() {
         />
         <StatCard
           title="High Priority"
-          value="12"
+          value={String(highPriorityCount)}
           subtext="Require Urgent Attention"
-          trend="4 Critical"
+          trend="Critical Flagged"
           trendType="up"
           trendText="flagged"
           status="red"
@@ -86,7 +164,7 @@ export default function RoadDefects() {
         />
         <StatCard
           title="Under Repair"
-          value="38"
+          value={String(underRepairCount)}
           subtext="Maintenance Teams Dispatched"
           trend="18 in progress"
           trendType="neutral"
@@ -96,7 +174,7 @@ export default function RoadDefects() {
         />
         <StatCard
           title="Resolved"
-          value="184"
+          value={String(resolvedCount)}
           subtext="Closed Last 30 Days"
           trend="94.2%"
           trendType="up"
@@ -106,10 +184,15 @@ export default function RoadDefects() {
         />
       </section>
 
+      {/* Prototype AI Road Defect Detection Demo Component */}
+      <section className="grid grid-cols-1 gap-5">
+        <AIDetectionDemo onDefectAdded={loadDefects} />
+      </section>
+
       {/* Middle Row: Defect Type Distribution (7 cols) + Detection Quality (5 cols) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-7">
-          <DefectTypeChart />
+          <DefectTypeChart defects={defects} />
         </div>
         <div className="lg:col-span-5">
           <DetectionConfidence />
@@ -119,17 +202,22 @@ export default function RoadDefects() {
       {/* Map & Hotspots Row: Defect Map (7 cols) + Priority Queue (5 cols) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-7">
-          <DefectMap />
+          <DefectMap defects={defects} />
         </div>
         <div className="lg:col-span-5">
-          <PriorityQueue />
+          <PriorityQueue defects={defects} />
         </div>
       </section>
 
       {/* Bottom Row: Recent Defects Filterable Table (12 cols) */}
       <section className="grid grid-cols-1 gap-5">
         <div className="col-span-12">
-          <DefectTable />
+          <DefectTable
+            defects={defects}
+            loading={loading}
+            error={error}
+            onRefresh={loadDefects}
+          />
         </div>
       </section>
     </div>

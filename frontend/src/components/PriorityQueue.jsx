@@ -53,7 +53,22 @@ const mockPriorityItems = [
   }
 ];
 
-export default function PriorityQueue() {
+export default function PriorityQueue({ defects = [] }) {
+  let items = mockPriorityItems;
+
+  if (Array.isArray(defects) && defects.length > 0) {
+    items = defects.map((d, idx) => ({
+      id: d.id ? `WO-${d.id}` : `WO-880${idx + 1}`,
+      type: d.type || 'Pothole Hazard',
+      location: d.location || 'City Corridor',
+      severity: d.severity || 'High',
+      score: `${d.confidence ? parseInt(d.confidence) || 90 : 90}/100`,
+      age: 'Just now',
+      action: d.status === 'New' ? 'Dispatching Crew' : 'Work Order Active',
+      busId: d.busId || 'BUS-102'
+    })).slice(0, 5);
+  }
+
   const getSeverityBadge = (severity) => {
     switch (severity) {
       case 'Critical':
@@ -87,63 +102,57 @@ export default function PriorityQueue() {
           </div>
 
           <span className="text-[10px] font-bold text-red-400 bg-red-950/60 px-2 py-1 rounded border border-red-500/30 animate-pulse">
-            5 URGENT WORK ORDERS
+            {items.length} URGENT WORK ORDERS
           </span>
         </div>
 
         {/* Priority Queue List */}
         <div className="mt-3 space-y-2.5 min-h-0 flex-1 overflow-y-auto pr-1">
-          {mockPriorityItems.map((item, idx) => (
+          {items.map((item, idx) => (
             <div
               key={item.id}
               className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700/80 transition-all flex items-center justify-between gap-3 cursor-pointer group"
             >
               <div className="flex items-center space-x-3 min-w-0">
-                <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-xs text-cyan-400 flex-shrink-0">
+                <span className="w-5 h-5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400 flex items-center justify-center flex-shrink-0">
                   #{idx + 1}
-                </div>
-                <div className="min-w-0">
+                </span>
+                <div className="min-w-0 space-y-0.5">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-xs font-bold text-slate-200 truncate group-hover:text-cyan-400 transition-colors">
+                    <h4 className="text-xs font-bold text-slate-200 group-hover:text-cyan-400 transition-colors truncate">
                       {item.type}
                     </h4>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${getSeverityBadge(item.severity)}`}>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${getSeverityBadge(
+                        item.severity
+                      )}`}
+                    >
                       {item.severity}
                     </span>
                   </div>
-
-                  <div className="flex items-center space-x-3 text-[11px] text-slate-400 mt-1">
-                    <span className="flex items-center gap-1 truncate max-w-[170px]">
-                      <MapPin className="h-3 w-3 text-cyan-400 flex-shrink-0" />
-                      {item.location}
+                  <div className="flex items-center space-x-2 text-[10px] text-slate-400">
+                    <span className="flex items-center space-x-1 truncate">
+                      <MapPin className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                      <span className="truncate max-w-[140px]">{item.location}</span>
                     </span>
-                    <span className="flex items-center gap-1 flex-shrink-0">
-                      <Clock className="h-3 w-3 text-slate-500" />
-                      {item.age}
-                    </span>
+                    <span>•</span>
+                    <span className="font-mono text-cyan-400/80">{item.busId}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-right flex-shrink-0">
-                <span className="text-xs font-bold text-amber-400 font-mono">
-                  {item.score}
+              <div className="text-right flex-shrink-0 space-y-1">
+                <span className="inline-block text-[10px] font-mono font-bold text-amber-400 bg-amber-950/50 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                  Risk {item.score}
                 </span>
-                <p className="text-[10px] text-emerald-400 font-medium mt-0.5">
-                  {item.action}
+                <p className="text-[10px] text-slate-400 flex items-center justify-end space-x-1">
+                  <Clock className="h-2.5 w-2.5" />
+                  <span>{item.age}</span>
                 </p>
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-        <span>Work orders auto-ranked by traffic volume & depth</span>
-        <button className="text-cyan-400 hover:text-cyan-300 font-medium text-[11px] transition-colors">
-          Dispatch All High Priority
-        </button>
       </div>
     </div>
   );
